@@ -2,22 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Campaign Optimization System{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <ul class="flashes">
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+    <div class="auth-wrap">
+        <div class="brand-panel">
+            <div class="brand-mark">CampOp</div>
 
-        {% block content %}{% endblock %}
+            <div>
+                <div class="brand-copy">
+                    <h1>Know exactly where your ad spend is working.</h1>
+                    <p>Track CTR, ROI, and conversions across every platform — then see where to move your budget next.</p>
+                </div>
+                <div class="bars">
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <div class="brand-stat">Built for marketers managing <strong>multi-platform</strong> campaigns</div>
+        </div>
+
+        <div class="form-panel">
+            <div class="form-card">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <ul class="flashes">
+                            {% for message in messages %}
+                                <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
     </div>
 </body>
 </html>

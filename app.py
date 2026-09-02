@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import pymysql
+import re
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -17,8 +18,77 @@ DB_CONFIG = {
 
 def get_db_connection():
     return pymysql.connect(**DB_CONFIG)
+def is_password_valid(password):
+    if len(password) < 6:
+        return False, "Password must be at least 6 characters long."
+    if not re.search(r"[A-Za-z]", password):
+        return False, "Password must include at least one letter."
+    if not re.search(r"[0-9]", password):
+        return False, "Password must include at least one number."
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=~`\[\];'/\\]", password):
+        return False, "Password must include at least one special character."
+    return True, ""
+
+# =====================================================
+# CAMPAIGN ANALYSIS MODULE
+# =====================================================
+#
+# STEP 1: Add this helper function to app.py, ABOVE your routes
+# (right after the get_db_connection() function is a good spot).
+# It takes one campaign record and returns it with calculated stats added.
+
+def calculate_campaign_stats(c):
+    """Takes a campaign dict (from DB) and adds CTR, CPC, CPA, Conversion Rate, ROI."""
+    impressions = c["impressions"] or 0
+    clicks = c["clicks"] or 0
+    conversions = c["conversions"] or 0
+    budget = float(c["budget"] or 0)
+    revenue = float(c["revenue"] or 0)
+
+    # CTR = (Clicks / Impressions) * 100
+    c["ctr"] = round((clicks / impressions) * 100, 2) if impressions > 0 else 0
+
+    # CPC = Budget / Clicks
+    c["cpc"] = round(budget / clicks, 2) if clicks > 0 else 0
+
+    # Conversion Rate = (Conversions / Clicks) * 100
+    c["conversion_rate"] = round((conversions / clicks) * 100, 2) if clicks > 0 else 0
+
+    # CPA = Budget / Conversions
+    c["cpa"] = round(budget / conversions, 2) if conversions > 0 else 0
+
+    # ROI = ((Revenue - Budget) / Budget) * 100
+    c["roi"] = round(((revenue - budget) / budget) * 100, 2) if budget > 0 else 0
+
+    return c
 
 
+# =====================================================
+# STEP 2: REPLACE your existing /campaigns route with this
+# updated version, which calculates stats for every campaign
+# before sending them to the template.
+# =====================================================
+
+@app.route("/campaigns")
+def campaigns():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM campaigns WHERE user_id=%s ORDER BY created_at DESC",
+                (session["user_id"],),
+            )
+            campaign_list = cursor.fetchall()
+    finally:
+        conn.close()
+
+    # Add calculated stats (CTR, CPC, CPA, Conversion Rate, ROI) to each campaign
+    campaign_list = [calculate_campaign_stats(c) for c in campaign_list]
+
+    return render_template("campaigns.html", campaigns=campaign_list)
 # ---------------- Home ----------------
 @app.route("/")
 def home():
@@ -102,6 +172,149 @@ def dashboard():
         return redirect(url_for("login"))
     return render_template("dashboard.html", user_name=session.get("user_name"))
 
+# =====================================================
+# CAMPAIGN MANAGEMENT MODULE
+# Add this code to your existing app.py, just above:
+#   if __name__ == "__main__":
+# =====================================================
 
+from datetime import datetime
+
+
+# ---------------- View all campaigns ----------------
+@app.route("/campaigns")
+def campaigns():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM campaigns WHERE user_id=%s ORDER BY created_at DESC",
+                (session["user_id"],),
+            )
+            campaign_list = cursor.fetchall()
+    finally:
+        conn.close()
+    campaign_list = [calculate_campaign_stats(c) for c in campaign_list]
+
+    return render_template("campaigns.html", campaigns=campaign_list)
+
+
+# ---------------- Add a new campaign ----------------
+@app.route("/campaigns/add", methods=["GET", "POST"])
+def add_campaign():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        name = request.form["name"].strip()
+        platform = request.form["platform"].strip()
+        budget = request.form["budget"]
+        impressions = request.form.get("impressions", 0)
+        clicks = request.form.get("clicks", 0)
+        conversions = request.form.get("conversions", 0)
+        revenue = request.form.get("revenue", 0)
+        start_date = request.form.get("start_date") or None
+        end_date = request.form.get("end_date") or None
+
+        if not name or not platform or not budget:
+            flash("Name, platform, and budget are required.")
+            return redirect(url_for("add_campaign"))
+
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """INSERT INTO campaigns
+                    (user_id, name, platform, budget, impressions, clicks, conversions, revenue, start_date, end_date)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (
+                        session["user_id"], name, platform, budget,
+                        impressions, clicks, conversions, revenue,
+                        start_date, end_date,
+                    ),
+                )
+                conn.commit()
+            flash("Campaign added successfully.")
+            return redirect(url_for("campaigns"))
+        finally:
+            conn.close()
+
+    return render_template("campaign_form.html", campaign=None)
+
+
+# ---------------- Edit a campaign ----------------
+@app.route("/campaigns/edit/<int:campaign_id>", methods=["GET", "POST"])
+def edit_campaign(campaign_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM campaigns WHERE id=%s AND user_id=%s",
+                (campaign_id, session["user_id"]),
+            )
+            campaign = cursor.fetchone()
+
+        if not campaign:
+            flash("Campaign not found.")
+            return redirect(url_for("campaigns"))
+
+        if request.method == "POST":
+            name = request.form["name"].strip()
+            platform = request.form["platform"].strip()
+            budget = request.form["budget"]
+            impressions = request.form.get("impressions", 0)
+            clicks = request.form.get("clicks", 0)
+            conversions = request.form.get("conversions", 0)
+            revenue = request.form.get("revenue", 0)
+            start_date = request.form.get("start_date") or None
+            end_date = request.form.get("end_date") or None
+
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """UPDATE campaigns SET
+                        name=%s, platform=%s, budget=%s, impressions=%s,
+                        clicks=%s, conversions=%s, revenue=%s,
+                        start_date=%s, end_date=%s
+                    WHERE id=%s AND user_id=%s""",
+                    (
+                        name, platform, budget, impressions, clicks,
+                        conversions, revenue, start_date, end_date,
+                        campaign_id, session["user_id"],
+                    ),
+                )
+                conn.commit()
+            flash("Campaign updated successfully.")
+            return redirect(url_for("campaigns"))
+    finally:
+        conn.close()
+
+    return render_template("campaign_form.html", campaign=campaign)
+
+
+# ---------------- Delete a campaign ----------------
+@app.route("/campaigns/delete/<int:campaign_id>", methods=["POST"])
+def delete_campaign(campaign_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM campaigns WHERE id=%s AND user_id=%s",
+                (campaign_id, session["user_id"]),
+            )
+            conn.commit()
+        flash("Campaign deleted.")
+    finally:
+        conn.close()
+
+    return redirect(url_for("campaigns"))
 if __name__ == "__main__":
     app.run(debug=True)
