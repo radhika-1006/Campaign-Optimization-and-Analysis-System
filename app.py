@@ -166,11 +166,69 @@ def logout():
 
 
 # ---------------- Dashboard (placeholder for next step) ----------------
+# =====================================================
+# UPDATED DASHBOARD ROUTE
+# Replace your existing @app.route("/dashboard") function with this.
+# It pulls quick stats (total campaigns, total budget, total revenue,
+# average ROI) to show on the dashboard.
+# =====================================================
+
+# =====================================================
+# UPDATED DASHBOARD ROUTE (with chart data)
+# Replace your existing @app.route("/dashboard") function with this.
+# =====================================================
+
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
         return redirect(url_for("login"))
-    return render_template("dashboard.html", user_name=session.get("user_name"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM campaigns WHERE user_id=%s",
+                (session["user_id"],),
+            )
+            campaign_list = cursor.fetchall()
+    finally:
+        conn.close()
+
+    total_campaigns = len(campaign_list)
+    total_budget = sum(float(c["budget"] or 0) for c in campaign_list)
+    total_revenue = sum(float(c["revenue"] or 0) for c in campaign_list)
+
+    if total_budget > 0:
+        avg_roi = round(((total_revenue - total_budget) / total_budget) * 100, 2)
+    else:
+        avg_roi = 0
+
+    # Data for the Budget vs Revenue bar chart (per campaign)
+    chart_labels = [c["name"] for c in campaign_list]
+    chart_budgets = [float(c["budget"] or 0) for c in campaign_list]
+    chart_revenues = [float(c["revenue"] or 0) for c in campaign_list]
+
+    # Data for the Budget-by-Platform pie chart
+    platform_totals = {}
+    for c in campaign_list:
+        platform = c["platform"] or "Other"
+        platform_totals[platform] = platform_totals.get(platform, 0) + float(c["budget"] or 0)
+    platform_labels = list(platform_totals.keys())
+    platform_values = list(platform_totals.values())
+
+    return render_template(
+        "dashboard.html",
+        user_name=session.get("user_name"),
+        total_campaigns=total_campaigns,
+        total_budget=round(total_budget, 2),
+        total_revenue=round(total_revenue, 2),
+        avg_roi=avg_roi,
+        chart_labels=chart_labels,
+        chart_budgets=chart_budgets,
+        chart_revenues=chart_revenues,
+        platform_labels=platform_labels,
+        platform_values=platform_values,
+    )
 
 # =====================================================
 # CAMPAIGN MANAGEMENT MODULE
@@ -182,25 +240,6 @@ from datetime import datetime
 
 
 # ---------------- View all campaigns ----------------
-@app.route("/campaigns")
-def campaigns():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    conn = get_db_connection()
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM campaigns WHERE user_id=%s ORDER BY created_at DESC",
-                (session["user_id"],),
-            )
-            campaign_list = cursor.fetchall()
-    finally:
-        conn.close()
-    campaign_list = [calculate_campaign_stats(c) for c in campaign_list]
-
-    return render_template("campaigns.html", campaigns=campaign_list)
-
 
 # ---------------- Add a new campaign ----------------
 @app.route("/campaigns/add", methods=["GET", "POST"])

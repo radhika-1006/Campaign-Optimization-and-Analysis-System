@@ -1,7 +1,95 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
+{% block container_class %}container-wide{% endblock %}
 {% block content %}
 <h2>Welcome, {{ user_name }}!</h2>
-<p>This is your dashboard. Campaign management and analysis features will appear here in the next steps.</p>
-<a href="{{ url_for('logout') }}">Logout</a>
+<p class="sub">Here's a quick look at your campaign performance.</p>
+
+<div class="stats-grid">
+    <div class="stat-box">
+        <div class="stat-value">{{ total_campaigns }}</div>
+        <div class="stat-label">Campaigns</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ total_budget }}</div>
+        <div class="stat-label">Total Budget</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ total_revenue }}</div>
+        <div class="stat-label">Total Revenue</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value" style="color: {{ '#0B2545' if avg_roi >= 0 else '#B91C1C' }};">{{ avg_roi }}%</div>
+        <div class="stat-label">Avg. ROI</div>
+    </div>
+</div>
+
+{% if chart_labels %}
+<div class="charts-grid">
+    <div class="chart-box">
+        <h3>Budget vs Revenue by Campaign</h3>
+        <canvas id="budgetRevenueChart"></canvas>
+    </div>
+    <div class="chart-box">
+        <h3>Budget by Platform</h3>
+        <canvas id="platformChart"></canvas>
+    </div>
+</div>
+{% else %}
+<p style="text-align:center; color:#64748B; margin: 24px 0;">Add a campaign to see your performance charts here.</p>
+{% endif %}
+
+<div class="dash-links">
+    <a href="{{ url_for('campaigns') }}" class="dash-link primary">View My Campaigns</a>
+    <a href="{{ url_for('add_campaign') }}" class="dash-link">+ Add New Campaign</a>
+</div>
+
+<p><a href="{{ url_for('logout') }}">Logout</a></p>
+{% endblock %}
+
+{% block scripts %}
+{% if chart_labels %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const budgetRevenueCtx = document.getElementById('budgetRevenueChart');
+    new Chart(budgetRevenueCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels | tojson }},
+            datasets: [
+                {
+                    label: 'Budget',
+                    data: {{ chart_budgets | tojson }},
+                    backgroundColor: '#0B2545'
+                },
+                {
+                    label: 'Revenue',
+                    data: {{ chart_revenues | tojson }},
+                    backgroundColor: '#64748B'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const platformCtx = document.getElementById('platformChart');
+    new Chart(platformCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ platform_labels | tojson }},
+            datasets: [{
+                data: {{ platform_values | tojson }},
+                backgroundColor: ['#0B2545', '#1E3A5F', '#3B5B85', '#64748B', '#94A3B8', '#CBD5E1']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+</script>
+{% endif %}
 {% endblock %}

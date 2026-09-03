@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 {% block title %}My Campaigns{% endblock %}
+{% block container_class %}container-wide{% endblock %}
 {% block content %}
 <h2>My Campaigns</h2>
+<p class="sub">All your campaigns and their performance, in one place.</p>
 
-<p><a href="{{ url_for('add_campaign') }}">+ Add New Campaign</a></p>
+<p style="text-align:center; margin-bottom: 20px;">
+    <a href="{{ url_for('add_campaign') }}" class="dash-link primary" style="display:inline-block; padding: 10px 20px;">+ Add New Campaign</a>
+</p>
 
 {% if campaigns %}
-<table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
+<div style="overflow-x:auto;">
+<table border="0" cellpadding="0" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
     <tr>
         <th>Name</th>
         <th>Platform</th>
@@ -29,20 +34,21 @@
         <td>{{ c.cpc }}</td>
         <td>{{ c.conversion_rate }}</td>
         <td>{{ c.cpa }}</td>
-        <td style="color: {{ 'green' if c.roi >= 0 else 'red' }};">{{ c.roi }}</td>
+        <td style="color: {{ '#0B2545' if c.roi >= 0 else '#B91C1C' }}; font-weight:700;">{{ c.roi }}</td>
         <td>
             <a href="{{ url_for('edit_campaign', campaign_id=c.id) }}">Edit</a>
-            |
+            &nbsp;|&nbsp;
             <form action="{{ url_for('delete_campaign', campaign_id=c.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this campaign?');">
-                <button type="submit">Delete</button>
+                <button type="submit" style="all:unset; color:#B91C1C; cursor:pointer; font-weight:600; font-size:13px;">Delete</button>
             </form>
         </td>
     </tr>
     {% endfor %}
 </table>
+</div>
 {% else %}
-<p>No campaigns yet. Add your first one!</p>
+<p style="text-align:center; color:#64748B;">No campaigns yet. Add your first one!</p>
 {% endif %}
 
-<p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+<p style="text-align:center; margin-top:24px;"><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
 {% endblock %}
