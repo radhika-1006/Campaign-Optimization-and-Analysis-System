@@ -374,3 +374,935 @@ table td {
         grid-template-columns: 1fr;
     }
 }
+
+/* Description textarea */
+textarea {
+    padding: 11px 13px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: #F9FAFB;
+    resize: vertical;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #0B2545;
+    box-shadow: 0 0 0 3px rgba(11,37,69,0.12);
+    background: #FFFFFF;
+}
+
+/* Ad mockup (Canva-style creative preview) */
+.ad-mockup {
+    background: #FFFFFF;
+    border: 1px solid #DDE3EC;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.ad-mockup-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+}
+
+.ad-mockup-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #0B2545;
+    flex-shrink: 0;
+}
+
+.ad-mockup-brand {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0B2545;
+}
+
+.ad-mockup-sponsored {
+    font-size: 11px;
+    color: #94A3B8;
+}
+
+.ad-mockup-body {
+    background: #F7F9FC;
+    padding: 22px 16px;
+    text-align: center;
+    border-top: 1px solid #EEF1F6;
+    border-bottom: 1px solid #EEF1F6;
+}
+
+.ad-mockup-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0B2545;
+    margin-bottom: 6px;
+    word-wrap: break-word;
+}
+
+.ad-mockup-desc {
+    font-size: 12.5px;
+    color: #64748B;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.ad-mockup-cta {
+    text-align: center;
+    padding: 11px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0B2545;
+    cursor: default;
+}
+
+/* Top navigation bar */
+body.with-nav {
+    padding-top: 66px;
+}
+
+.topnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: #0B2545;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.topnav-brand {
+    color: #FFFFFF;
+    font-weight: 800;
+    font-size: 15px;
+}
+
+.topnav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.topnav-links a {
+    color: #B7BEDA;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.topnav-links a:hover {
+    color: #FFFFFF;
+}
+
+@media (max-width: 720px) {
+    .topnav {
+        padding: 12px 16px;
+    }
+    .topnav-links {
+        gap: 12px;
+    }
+    .topnav-links a {
+        font-size: 11.5px;
+    }
+}
+
+/* Campaigns table polish */
+.campaigns-table-wrap {
+    overflow-x: auto;
+}
+
+.campaigns-table-wrap table th {
+    user-select: none;
+    white-space: nowrap;
+}
+
+.campaigns-table-wrap table th:hover {
+    background: #16325C;
+}
+
+.sort-arrow {
+    font-size: 9px;
+    margin-left: 3px;
+    color: #B7BEDA;
+}
+
+.actions-cell {
+    white-space: nowrap;
+}
+
+/* Mobile card view (hidden by default, shown under 720px) */
+.campaigns-cards {
+    display: none;
+}
+
+.campaign-card {
+    background: #F7F9FC;
+    border: 1px solid #DDE3EC;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+
+.campaign-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.campaign-card-name {
+    font-weight: 700;
+    color: #0B2545;
+    font-size: 14.5px;
+}
+
+.campaign-card-platform {
+    font-size: 12px;
+    color: #64748B;
+    margin-bottom: 10px;
+}
+
+.campaign-card-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.campaign-card-stats div {
+    background: #FFFFFF;
+    border-radius: 6px;
+    padding: 6px 4px;
+    text-align: center;
+}
+
+.campaign-card-stats span {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0B2545;
+}
+
+.campaign-card-stats small {
+    font-size: 10px;
+    color: #94A3B8;
+}
+
+.campaign-card-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    padding: 4px 0;
+    color: #64748B;
+}
+
+.campaign-card-row strong {
+    color: #0B2545;
+}
+
+.campaign-card-actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #E5E9F0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.campaign-card-actions a {
+    color: #0B2545;
+}
+
+@media (max-width: 720px) {
+    .campaigns-table-wrap {
+        display: none;
+    }
+    .campaigns-cards {
+        display: block;
+    }
+}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0B2545;
+    color: #1F2937;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* soft decorative circles, lighter navy tint */
+body::before {
+    content: "";
+    position: absolute;
+    top: -100px;
+    left: -100px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+}
+
+body::after {
+    content: "";
+    position: absolute;
+    bottom: -120px;
+    right: -80px;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+}
+
+.container {
+    width: 100%;
+    max-width: 380px;
+    background: #FFFFFF;
+    padding: 40px 34px;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    margin: 40px 16px;
+    position: relative;
+    z-index: 2;
+}
+
+.logo-badge {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: #0B2545;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+    box-shadow: 0 6px 16px rgba(11,37,69,0.35);
+}
+
+.logo-badge svg {
+    width: 24px;
+    height: 24px;
+}
+
+h2 {
+    text-align: center;
+    margin: 0 0 6px;
+    font-size: 23px;
+    font-weight: 800;
+    color: #0B2545;
+    letter-spacing: -0.01em;
+}
+
+.sub {
+    text-align: center;
+    color: #64748B;
+    font-size: 13.5px;
+    margin: 0 0 28px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1E3A5F;
+    margin-top: 15px;
+    margin-bottom: 6px;
+}
+
+input {
+    padding: 11px 13px;
+    border: 1.5px solid #DDE3EC;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: #F7F9FC;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus {
+    outline: none;
+    border-color: #0B2545;
+    box-shadow: 0 0 0 3px rgba(11,37,69,0.12);
+    background: #FFFFFF;
+}
+
+small {
+    color: #94A3B8;
+    font-size: 11.5px;
+    margin-top: 4px;
+}
+
+button {
+    margin-top: 24px;
+    padding: 12px;
+    background: #0B2545;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
+    box-shadow: 0 4px 12px rgba(11,37,69,0.3);
+}
+
+button:hover {
+    background: #16325C;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(11,37,69,0.4);
+}
+
+.container p {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #64748B;
+    text-align: center;
+}
+
+.container p a {
+    color: #0B2545;
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid #0B2545;
+}
+
+.flashes {
+    list-style: none;
+    padding: 10px 12px;
+    margin: 0 0 18px;
+    background: #F7F9FC;
+    border: 1px solid #DDE3EC;
+    border-radius: 8px;
+    color: #0B2545;
+    font-size: 13px;
+}
+
+/* Campaign table styling (dashboard/campaigns pages) */
+table {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+table th {
+    background: #0B2545;
+    color: white;
+    padding: 10px;
+}
+
+table td {
+    padding: 8px 10px;
+    color: #1E3A5F;
+}
+
+table tr:nth-child(even) {
+    background: #F7F9FC;
+}
+
+/* Dashboard: wider container, stat cards, nav links */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 20px 0 24px;
+}
+
+.stat-box {
+    background: #F7F9FC;
+    border: 1px solid #DDE3EC;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0B2545;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #64748B;
+    margin-top: 4px;
+}
+
+.dash-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dash-link {
+    display: block;
+    text-align: center;
+    padding: 11px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1.5px solid #0B2545;
+    color: #0B2545;
+}
+
+.dash-link.primary {
+    background: #0B2545;
+    color: #FFFFFF;
+}
+
+.dash-link:hover {
+    opacity: 0.9;
+}
+
+/* Wide container for dashboard */
+.container-wide {
+    max-width: 900px;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 20px;
+    margin: 8px 0 28px;
+}
+
+.chart-box {
+    background: #F7F9FC;
+    border: 1px solid #DDE3EC;
+    border-radius: 10px;
+    padding: 18px;
+}
+
+.chart-box h3 {
+    font-size: 14px;
+    color: #0B2545;
+    margin: 0 0 14px;
+    text-align: center;
+}
+
+@media (max-width: 720px) {
+    .container-wide {
+        max-width: 380px;
+    }
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Campaigns table refinements */
+table th {
+    text-align: left;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+table td {
+    border-bottom: 1px solid #EEF1F6;
+    font-size: 13.5px;
+}
+
+/* Add/Edit campaign form with live preview */
+.form-with-preview {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 28px;
+    align-items: start;
+}
+
+.preview-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+}
+
+.preview-card {
+    background: #0B2545;
+    color: #FFFFFF;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.preview-top {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.preview-name {
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.preview-platform {
+    font-size: 12.5px;
+    color: #94A3B8;
+    margin-top: 2px;
+}
+
+.preview-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.preview-stats div {
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+}
+
+.preview-stats span {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.preview-stats small {
+    font-size: 10.5px;
+    color: #94A3B8;
+}
+
+.preview-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.preview-row span {
+    color: #94A3B8;
+}
+
+@media (max-width: 720px) {
+    .form-with-preview {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Description textarea */
+textarea {
+    padding: 11px 13px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: #F9FAFB;
+    resize: vertical;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #0B2545;
+    box-shadow: 0 0 0 3px rgba(11,37,69,0.12);
+    background: #FFFFFF;
+}
+
+/* Ad mockup (Canva-style creative preview) */
+.ad-mockup {
+    background: #FFFFFF;
+    border: 1px solid #DDE3EC;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.ad-mockup-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+}
+
+.ad-mockup-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #0B2545;
+    flex-shrink: 0;
+}
+
+.ad-mockup-brand {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0B2545;
+}
+
+.ad-mockup-sponsored {
+    font-size: 11px;
+    color: #94A3B8;
+}
+
+.ad-mockup-body {
+    background: #F7F9FC;
+    padding: 22px 16px;
+    text-align: center;
+    border-top: 1px solid #EEF1F6;
+    border-bottom: 1px solid #EEF1F6;
+}
+
+.ad-mockup-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0B2545;
+    margin-bottom: 6px;
+    word-wrap: break-word;
+}
+
+.ad-mockup-desc {
+    font-size: 12.5px;
+    color: #64748B;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.ad-mockup-cta {
+    text-align: center;
+    padding: 11px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0B2545;
+    cursor: default;
+}
+
+/* Top navigation bar */
+body.with-nav {
+    padding-top: 66px;
+}
+
+.topnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: #0B2545;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.topnav-brand {
+    color: #FFFFFF;
+    font-weight: 800;
+    font-size: 15px;
+}
+
+.topnav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.topnav-links a {
+    color: #B7BEDA;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.topnav-links a:hover {
+    color: #FFFFFF;
+}
+
+@media (max-width: 720px) {
+    .topnav {
+        padding: 12px 16px;
+    }
+    .topnav-links {
+        gap: 12px;
+    }
+    .topnav-links a {
+        font-size: 11.5px;
+    }
+}
+
+/* Campaigns table polish */
+.campaigns-table-wrap {
+    overflow-x: auto;
+}
+
+.campaigns-table-wrap table th {
+    user-select: none;
+    white-space: nowrap;
+}
+
+.campaigns-table-wrap table th:hover {
+    background: #16325C;
+}
+
+.sort-arrow {
+    font-size: 9px;
+    margin-left: 3px;
+    color: #B7BEDA;
+}
+
+.actions-cell {
+    white-space: nowrap;
+}
+
+/* Mobile card view (hidden by default, shown under 720px) */
+.campaigns-cards {
+    display: none;
+}
+
+.campaign-card {
+    background: #F7F9FC;
+    border: 1px solid #DDE3EC;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+
+.campaign-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.campaign-card-name {
+    font-weight: 700;
+    color: #0B2545;
+    font-size: 14.5px;
+}
+
+.campaign-card-platform {
+    font-size: 12px;
+    color: #64748B;
+    margin-bottom: 10px;
+}
+
+.campaign-card-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.campaign-card-stats div {
+    background: #FFFFFF;
+    border-radius: 6px;
+    padding: 6px 4px;
+    text-align: center;
+}
+
+.campaign-card-stats span {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0B2545;
+}
+
+.campaign-card-stats small {
+    font-size: 10px;
+    color: #94A3B8;
+}
+
+.campaign-card-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    padding: 4px 0;
+    color: #64748B;
+}
+
+.campaign-card-row strong {
+    color: #0B2545;
+}
+
+.campaign-card-actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #E5E9F0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.campaign-card-actions a {
+    color: #0B2545;
+}
+
+@media (max-width: 720px) {
+    .campaigns-table-wrap {
+        display: none;
+    }
+    .campaigns-cards {
+        display: block;
+    }
+}
+/* =====================================================
+   Empty state component
+   Used on campaigns.html, dashboard.html, compare.html,
+   admin_campaigns.html
+   ===================================================== */
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-state-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: #F7F9FC;
+    border: 1.5px dashed #CBD5E1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.empty-state-icon svg {
+    width: 26px;
+    height: 26px;
+}
+
+.empty-state-title {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: #0B2545;
+    margin-bottom: 6px;
+}
+
+.empty-state-text {
+    font-size: 13px;
+    color: #64748B;
+    max-width: 320px;
+    margin: 0 auto 18px;
+    line-height: 1.6;
+}

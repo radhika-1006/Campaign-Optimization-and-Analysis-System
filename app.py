@@ -150,6 +150,7 @@ def login():
         if user and check_password_hash(user["password"], password):
             session["user_id"] = user["id"]
             session["user_name"] = user["name"]
+            session["is_admin"] = bool(user["is_admin"])
             return redirect(url_for("dashboard"))
         else:
             flash("Invalid email or password.")
@@ -187,7 +188,7 @@ def dashboard():
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                "SELECT * FROM campaigns WHERE user_id=%s",
+                "SELECT * FROM campaigns WHERE user_id=%s AND status='approved'",
                 (session["user_id"],),
             )
             campaign_list = cursor.fetchall()
@@ -243,6 +244,13 @@ from datetime import datetime
 
 # ---------------- Add a new campaign ----------------
 @app.route("/campaigns/add", methods=["GET", "POST"])
+# =====================================================
+# UPDATED add_campaign() and edit_campaign() ROUTES
+# Replace your existing versions of BOTH functions with these,
+# which now handle the new "description" field.
+# =====================================================
+
+@app.route("/campaigns/add", methods=["GET", "POST"])
 def add_campaign():
     if "user_id" not in session:
         return redirect(url_for("login"))
@@ -250,6 +258,7 @@ def add_campaign():
     if request.method == "POST":
         name = request.form["name"].strip()
         platform = request.form["platform"].strip()
+        description = request.form.get("description", "").strip()
         budget = request.form["budget"]
         impressions = request.form.get("impressions", 0)
         clicks = request.form.get("clicks", 0)
@@ -267,10 +276,10 @@ def add_campaign():
             with conn.cursor() as cursor:
                 cursor.execute(
                     """INSERT INTO campaigns
-                    (user_id, name, platform, budget, impressions, clicks, conversions, revenue, start_date, end_date)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (user_id, name, platform, description, budget, impressions, clicks, conversions, revenue, start_date, end_date)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (
-                        session["user_id"], name, platform, budget,
+                        session["user_id"], name, platform, description, budget,
                         impressions, clicks, conversions, revenue,
                         start_date, end_date,
                     ),
@@ -282,7 +291,6 @@ def add_campaign():
             conn.close()
 
     return render_template("campaign_form.html", campaign=None)
-
 
 # ---------------- Edit a campaign ----------------
 @app.route("/campaigns/edit/<int:campaign_id>", methods=["GET", "POST"])
@@ -355,5 +363,192 @@ def delete_campaign(campaign_id):
         conn.close()
 
     return redirect(url_for("campaigns"))
+@app.route("/compare")
+def compare():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM campaigns WHERE user_id=%s AND status='approved'",
+                (session["user_id"],),
+            )
+            campaign_list = cursor.fetchall()
+    finally:
+        conn.close()
+
+    campaign_list = [calculate_campaign_stats(c) for c in campaign_list]
+
+    if not campaign_list:
+        return render_template("compare.html", campaigns=[], best=None, worst=None, suggestions=[])
+
+    ranked = sorted(campaign_list, key=lambda c: c["roi"], reverse=True)
+    best = ranked[0]
+    worst = ranked[-1]
+
+    suggestions = []
+    if len(ranked) >= 2:
+        suggestions.append(
+            f"'{best['name']}' has the highest ROI ({best['roi']}%). Consider shifting more budget toward it."
+        )
+        if worst["roi"] < 0:
+            suggestions.append(
+                f"'{worst['name']}' has a negative ROI ({worst['roi']}%). Consider pausing or reducing its budget."
+            )
+        elif worst["roi"] < best["roi"] / 2:
+            suggestions.append(
+                f"'{worst['name']}' is underperforming compared to '{best['name']}'. Review its targeting or creative."
+            )
+
+    for c in campaign_list:
+        if c["ctr"] < 1:
+            suggestions.append(f"'{c['name']}' has a low CTR ({c['ctr']}%). Try improving ad creative or targeting.")
+        if c["conversion_rate"] < 2 and c["clicks"] and c["clicks"] > 20:
+            suggestions.append(f"'{c['name']}' has a low conversion rate ({c['conversion_rate']}%). Check your landing page.")
+
+    if not suggestions:
+        suggestions.append("All campaigns are performing reasonably well. Keep monitoring regularly.")
+
+    return render_template(
+        "compare.html",
+        campaigns=ranked,
+        best=best,
+        worst=worst,
+        suggestions=suggestions,
+    )
+# =====================================================
+# REPORT MODULE
+# Add this route to app.py, among your other routes
+# (e.g. right after /compare).
+# =====================================================
+
+from datetime import datetime as dt
+
+
+@app.route("/report")
+def report():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM campaigns WHERE user_id=%s AND status='approved'",
+                (session["user_id"],),
+            )
+            campaign_list = cursor.fetchall()
+    finally:
+        conn.close()
+
+    campaign_list = [calculate_campaign_stats(c) for c in campaign_list]
+
+    total_campaigns = len(campaign_list)
+    total_budget = sum(float(c["budget"] or 0) for c in campaign_list)
+    total_revenue = sum(float(c["revenue"] or 0) for c in campaign_list)
+    avg_roi = round(((total_revenue - total_budget) / total_budget) * 100, 2) if total_budget > 0 else 0
+
+    best = worst = None
+    suggestions = []
+    if campaign_list:
+        ranked = sorted(campaign_list, key=lambda c: c["roi"], reverse=True)
+        best = ranked[0]
+        worst = ranked[-1]
+
+        if len(ranked) >= 2:
+            suggestions.append(f"'{best['name']}' has the highest ROI ({best['roi']}%). Consider shifting more budget toward it.")
+
+        for c in campaign_list:
+            if c["roi"] < 0:
+                suggestions.append(f"'{c['name']}' has a negative ROI ({c['roi']}%). Consider pausing or reducing its budget.")
+            if c["ctr"] < 1:
+                suggestions.append(f"'{c['name']}' has a low CTR ({c['ctr']}%). Try improving ad creative or targeting.")
+
+        if not suggestions:
+            suggestions.append("All campaigns are performing reasonably well.")
+
+    return render_template(
+        "report.html",
+        user_name=session.get("user_name"),
+        generated_at=dt.now().strftime("%d %B %Y, %I:%M %p"),
+        campaigns=campaign_list,
+        total_campaigns=total_campaigns,
+        total_budget=round(total_budget, 2),
+        total_revenue=round(total_revenue, 2),
+        avg_roi=avg_roi,
+        best=best,
+        worst=worst,
+        suggestions=suggestions,
+    )
+@app.route("/admin/campaigns")
+def admin_campaigns():
+    if "user_id" not in session or not session.get("is_admin"):
+        flash("You do not have access to this page.")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """SELECT campaigns.*, users.name AS owner_name, users.email AS owner_email
+                   FROM campaigns
+                   JOIN users ON campaigns.user_id = users.id
+                   ORDER BY
+                       CASE campaigns.status
+                           WHEN 'pending' THEN 0
+                           WHEN 'approved' THEN 1
+                           ELSE 2
+                       END,
+                       campaigns.created_at DESC"""
+            )
+            all_campaigns = cursor.fetchall()
+    finally:
+        conn.close()
+
+    return render_template("admin_campaigns.html", campaigns=all_campaigns)
+
+
+@app.route("/admin/campaigns/approve/<int:campaign_id>", methods=["POST"])
+def approve_campaign(campaign_id):
+    if "user_id" not in session or not session.get("is_admin"):
+        flash("You do not have access to this action.")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE campaigns SET status='approved' WHERE id=%s",
+                (campaign_id,),
+            )
+            conn.commit()
+        flash("Campaign approved.")
+    finally:
+        conn.close()
+
+    return redirect(url_for("admin_campaigns"))
+
+
+@app.route("/admin/campaigns/reject/<int:campaign_id>", methods=["POST"])
+def reject_campaign(campaign_id):
+    if "user_id" not in session or not session.get("is_admin"):
+        flash("You do not have access to this action.")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE campaigns SET status='rejected' WHERE id=%s",
+                (campaign_id,),
+            )
+            conn.commit()
+        flash("Campaign rejected.")
+    finally:
+        conn.close()
+
+    return redirect(url_for("admin_campaigns"))
 if __name__ == "__main__":
     app.run(debug=True)

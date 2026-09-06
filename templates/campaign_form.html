@@ -1,14 +1,31 @@
 {% extends "base.html" %}
 {% block title %}{% if campaign %}Edit Campaign{% else %}Add Campaign{% endif %}{% endblock %}
 {% block container_class %}container-wide{% endblock %}
+{% block bodyclass %}with-nav{% endblock %}
+{% block topnav %}
+<nav class="topnav">
+    <div class="topnav-brand">CampOp</div>
+    <div class="topnav-links">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('campaigns') }}">Campaigns</a>
+        <a href="{{ url_for('compare') }}">Compare</a>
+        <a href="{{ url_for('report') }}">Report</a>
+        {% if session.is_admin %}<a href="{{ url_for('admin_campaigns') }}">Admin</a>{% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</nav>
+{% endblock %}
 {% block content %}
 <h2>{% if campaign %}Edit Campaign{% else %}Add New Campaign{% endif %}</h2>
-<p class="sub">Fill in the details — see a live preview on the right as you go.</p>
+<p class="sub">Fill in the details — see how it looks on the right as you go.</p>
 
 <div class="form-with-preview">
     <form method="POST" id="campaignForm">
         <label>Campaign Name</label>
         <input type="text" name="name" id="f_name" value="{{ campaign.name if campaign else '' }}" required>
+
+        <label>Description</label>
+        <textarea name="description" id="f_description" rows="3" placeholder="What is this campaign about? (shown as ad copy)">{{ campaign.description if campaign else '' }}</textarea>
 
         <label>Platform</label>
         <input type="text" name="platform" id="f_platform" placeholder="e.g. Google Ads, Facebook" value="{{ campaign.platform if campaign else '' }}" required>
@@ -38,21 +55,30 @@
     </form>
 
     <div class="preview-panel">
-        <div class="preview-label">Live Preview</div>
-        <div class="preview-card">
-            <div class="preview-top">
-                <span class="preview-name" id="p_name">Campaign Name</span>
-                <span class="preview-platform" id="p_platform">Platform</span>
+        <div class="preview-label">Ad Preview</div>
+        <div class="ad-mockup">
+            <div class="ad-mockup-top">
+                <div class="ad-mockup-avatar"></div>
+                <div>
+                    <div class="ad-mockup-brand" id="ad_platform">Platform</div>
+                    <div class="ad-mockup-sponsored">Sponsored</div>
+                </div>
             </div>
+            <div class="ad-mockup-body">
+                <div class="ad-mockup-title" id="ad_name">Your campaign name</div>
+                <div class="ad-mockup-desc" id="ad_description">Your description will appear here as ad copy.</div>
+            </div>
+            <div class="ad-mockup-cta">Learn More</div>
+        </div>
+
+        <div class="preview-label" style="margin-top:22px;">Performance Preview</div>
+        <div class="preview-card">
             <div class="preview-stats">
                 <div><span id="p_budget">0</span><small>Budget</small></div>
                 <div><span id="p_revenue">0</span><small>Revenue</small></div>
                 <div><span id="p_roi">0%</span><small>ROI</small></div>
             </div>
-            <div class="preview-row"><span>Impressions</span><strong id="p_impressions">0</strong></div>
-            <div class="preview-row"><span>Clicks</span><strong id="p_clicks">0</strong></div>
             <div class="preview-row"><span>CTR</span><strong id="p_ctr">0%</strong></div>
-            <div class="preview-row"><span>Conversions</span><strong id="p_conversions">0</strong></div>
             <div class="preview-row"><span>Conv. Rate</span><strong id="p_convrate">0%</strong></div>
         </div>
     </div>
@@ -68,7 +94,8 @@
     }
 
     function updatePreview() {
-        const name = document.getElementById('f_name').value || 'Campaign Name';
+        const name = document.getElementById('f_name').value || 'Your campaign name';
+        const description = document.getElementById('f_description').value || 'Your description will appear here as ad copy.';
         const platform = document.getElementById('f_platform').value || 'Platform';
         const budget = parseFloat(document.getElementById('f_budget').value) || 0;
         const impressions = parseFloat(document.getElementById('f_impressions').value) || 0;
@@ -76,13 +103,14 @@
         const conversions = parseFloat(document.getElementById('f_conversions').value) || 0;
         const revenue = parseFloat(document.getElementById('f_revenue').value) || 0;
 
-        document.getElementById('p_name').textContent = name;
-        document.getElementById('p_platform').textContent = platform;
+        // Ad mockup
+        document.getElementById('ad_name').textContent = name;
+        document.getElementById('ad_description').textContent = description;
+        document.getElementById('ad_platform').textContent = platform;
+
+        // Stats
         document.getElementById('p_budget').textContent = budget;
         document.getElementById('p_revenue').textContent = revenue;
-        document.getElementById('p_impressions').textContent = impressions;
-        document.getElementById('p_clicks').textContent = clicks;
-        document.getElementById('p_conversions').textContent = conversions;
 
         const ctr = impressions > 0 ? fmt((clicks / impressions) * 100) : 0;
         const convRate = clicks > 0 ? fmt((conversions / clicks) * 100) : 0;

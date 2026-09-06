@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block container_class %}container-wide{% endblock %}
+{% block bodyclass %}with-nav{% endblock %}
+{% block topnav %}
+<nav class="topnav">
+    <div class="topnav-brand">CampOp</div>
+    <div class="topnav-links">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('campaigns') }}">Campaigns</a>
+        <a href="{{ url_for('compare') }}">Compare</a>
+        <a href="{{ url_for('report') }}">Report</a>
+        {% if session.is_admin %}<a href="{{ url_for('admin_campaigns') }}">Admin</a>{% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</nav>
+{% endblock %}
 {% block content %}
 <h2>Welcome, {{ user_name }}!</h2>
 <p class="sub">Here's a quick look at your campaign performance.</p>
@@ -36,12 +50,26 @@
     </div>
 </div>
 {% else %}
-<p style="text-align:center; color:#64748B; margin: 24px 0;">Add a campaign to see your performance charts here.</p>
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="9" stroke="#94A3B8" stroke-width="2"/>
+            <path d="M12 8v4l3 2" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </div>
+    <div class="empty-state-title">No performance data yet</div>
+    <div class="empty-state-text">Once you add and get a campaign approved, your charts will appear right here.</div>
+    <a href="{{ url_for('add_campaign') }}" class="dash-link primary" style="display:inline-block; padding: 10px 20px;">+ Add New Campaign</a>
+</div>
 {% endif %}
 
 <div class="dash-links">
     <a href="{{ url_for('campaigns') }}" class="dash-link primary">View My Campaigns</a>
     <a href="{{ url_for('add_campaign') }}" class="dash-link">+ Add New Campaign</a>
+    <a href="{{ url_for('report') }}" class="dash-link">View Report</a>
+    {% if session.is_admin %}
+<a href="{{ url_for('admin_campaigns') }}" class="dash-link">Admin Panel</a>
+{% endif %}
 </div>
 
 <p><a href="{{ url_for('logout') }}">Logout</a></p>
@@ -60,12 +88,12 @@
                 {
                     label: 'Budget',
                     data: {{ chart_budgets | tojson }},
-                    backgroundColor: '#0B2545'
+                    backgroundColor: '#EF4444'
                 },
                 {
                     label: 'Revenue',
                     data: {{ chart_revenues | tojson }},
-                    backgroundColor: '#64748B'
+                    backgroundColor: '#22C55E'
                 }
             ]
         },
@@ -82,7 +110,7 @@
             labels: {{ platform_labels | tojson }},
             datasets: [{
                 data: {{ platform_values | tojson }},
-                backgroundColor: ['#0B2545', '#1E3A5F', '#3B5B85', '#64748B', '#94A3B8', '#CBD5E1']
+                backgroundColor: ['#FACC15', '#EF4444', '#22C55E', '#FB923C', '#4ADE80', '#FDE047']
             }]
         },
         options: {

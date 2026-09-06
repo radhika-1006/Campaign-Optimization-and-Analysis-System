@@ -6,7 +6,8 @@
     <title>{% block title %}Campaign Optimization System{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="{% block bodyclass %}{% endblock %}">
+    {% block topnav %}{% endblock %}
     <div class="container {% block container_class %}{% endblock %}">
         <div class="logo-badge">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

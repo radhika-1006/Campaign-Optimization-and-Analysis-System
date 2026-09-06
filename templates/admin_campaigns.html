@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Admin - Review Campaigns{% endblock %}
+{% block container_class %}container-wide{% endblock %}
+{% block bodyclass %}with-nav{% endblock %}
+{% block topnav %}
+<nav class="topnav">
+    <div class="topnav-brand">CampOp</div>
+    <div class="topnav-links">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('campaigns') }}">Campaigns</a>
+        <a href="{{ url_for('compare') }}">Compare</a>
+        <a href="{{ url_for('report') }}">Report</a>
+        {% if session.is_admin %}<a href="{{ url_for('admin_campaigns') }}">Admin</a>{% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+{% block content %}
+<h2>Admin: Review Campaigns</h2>
+<p class="sub">Approve or reject campaigns submitted by users.</p>
+
+{% if campaigns %}
+<div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; font-size:13.5px;">
+    <tr>
+        <th>Name</th>
+        <th>User</th>
+        <th>Platform</th>
+        <th>Budget</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    {% for c in campaigns %}
+    <tr>
+        <td>{{ c.name }}</td>
+        <td>{{ c.owner_name }}<br><small style="color:#94A3B8;">{{ c.owner_email }}</small></td>
+        <td>{{ c.platform }}</td>
+        <td>{{ c.budget }}</td>
+        <td>
+            {% if c.status == 'approved' %}
+                <span class="status-badge status-approved">Approved</span>
+            {% elif c.status == 'rejected' %}
+                <span class="status-badge status-rejected">Rejected</span>
+            {% else %}
+                <span class="status-badge status-pending">Pending</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if c.status != 'approved' %}
+            <form action="{{ url_for('approve_campaign', campaign_id=c.id) }}" method="POST" style="display:inline;">
+                <button type="submit" style="all:unset; color:#0B2545; font-weight:700; cursor:pointer; font-size:13px;">Approve</button>
+            </form>
+            {% endif %}
+            {% if c.status != 'rejected' %}
+            &nbsp;|&nbsp;
+            <form action="{{ url_for('reject_campaign', campaign_id=c.id) }}" method="POST" style="display:inline;">
+                <button type="submit" style="all:unset; color:#B91C1C; font-weight:700; cursor:pointer; font-size:13px;">Reject</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 12l2 2 4-4" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="9" stroke="#94A3B8" stroke-width="2"/>
+        </svg>
+    </div>
+    <div class="empty-state-title">All caught up</div>
+    <div class="empty-state-text">No campaigns have been submitted for review yet. Check back later.</div>
+</div>
+{% endif %}
+
+<p style="text-align:center; margin-top:24px;"><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+{% endblock %}

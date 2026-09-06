@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Campaign Report</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 40px;
+            color: #1F2937;
+            background: #F4F6F9;
+        }
+
+        .report-sheet {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            padding: 40px;
+            border-radius: 10px;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid #0B2545;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        .report-header h1 {
+            font-size: 22px;
+            color: #0B2545;
+            margin: 0 0 4px;
+        }
+
+        .report-header .meta {
+            font-size: 12.5px;
+            color: #64748B;
+        }
+
+        .print-btn {
+            background: #0B2545;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0B2545;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .summary-box {
+            background: #F7F9FC;
+            border: 1px solid #DDE3EC;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .summary-box .val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0B2545;
+        }
+
+        .summary-box .label {
+            font-size: 11px;
+            color: #64748B;
+            margin-top: 2px;
+        }
+
+        h2.section {
+            font-size: 15px;
+            color: #0B2545;
+            border-left: 4px solid #0B2545;
+            padding-left: 10px;
+            margin: 26px 0 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        th {
+            background: #0B2545;
+            color: white;
+            text-align: left;
+            padding: 8px 10px;
+        }
+
+        td {
+            padding: 7px 10px;
+            border-bottom: 1px solid #EEF1F6;
+        }
+
+        ul.suggestions {
+            padding-left: 20px;
+            font-size: 13px;
+            line-height: 1.8;
+            color: #1E3A5F;
+        }
+
+        .highlight-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .highlight-box {
+            background: #F7F9FC;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 13px;
+        }
+
+        .highlight-box strong {
+            display: block;
+            color: #0B2545;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        @media print {
+            body { padding: 0; background: white; }
+            .report-sheet { box-shadow: none; border-radius: 0; max-width: 100%; }
+            .print-btn { display: none; }
+            .back-link { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-sheet">
+        <div class="report-header">
+            <div>
+                <h1>Campaign Performance Report</h1>
+                <div class="meta">Prepared for {{ user_name }} &nbsp;•&nbsp; Generated {{ generated_at }}</div>
+            </div>
+            <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+        </div>
+
+        <a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+        <div class="summary-grid">
+            <div class="summary-box">
+                <div class="val">{{ total_campaigns }}</div>
+                <div class="label">Campaigns</div>
+            </div>
+            <div class="summary-box">
+                <div class="val">{{ total_budget }}</div>
+                <div class="label">Total Budget</div>
+            </div>
+            <div class="summary-box">
+                <div class="val">{{ total_revenue }}</div>
+                <div class="label">Total Revenue</div>
+            </div>
+            <div class="summary-box">
+                <div class="val" style="color: {{ '#0B2545' if avg_roi >= 0 else '#B91C1C' }};">{{ avg_roi }}%</div>
+                <div class="label">Avg. ROI</div>
+            </div>
+        </div>
+
+        {% if campaigns %}
+        <h2 class="section">Highlights</h2>
+        <div class="highlight-row">
+            <div class="highlight-box">
+                <strong>🏆 Best Performer</strong>
+                {{ best.name }} — ROI {{ best.roi }}% ({{ best.platform }})
+            </div>
+            <div class="highlight-box">
+                <strong>⚠️ Needs Attention</strong>
+                {{ worst.name }} — ROI {{ worst.roi }}% ({{ worst.platform }})
+            </div>
+        </div>
+
+        <h2 class="section">All Campaigns</h2>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Platform</th>
+                <th>Budget</th>
+                <th>Revenue</th>
+                <th>CTR (%)</th>
+                <th>Conv. Rate (%)</th>
+                <th>ROI (%)</th>
+            </tr>
+            {% for c in campaigns %}
+            <tr>
+                <td>{{ c.name }}</td>
+                <td>{{ c.platform }}</td>
+                <td>{{ c.budget }}</td>
+                <td>{{ c.revenue }}</td>
+                <td>{{ c.ctr }}</td>
+                <td>{{ c.conversion_rate }}</td>
+                <td>{{ c.roi }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h2 class="section">Recommendations</h2>
+        <ul class="suggestions">
+            {% for s in suggestions %}
+            <li>{{ s }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+<div style="text-align:center; padding: 40px 20px;">
+    <div style="width:56px;height:56px;border-radius:14px;background:#F7F9FC;border:1.5px dashed #CBD5E1;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:26px;height:26px;">
+            <path d="M8 12h8M8 8h8M8 16h5" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </div>
+    <div style="font-size:15.5px;font-weight:700;color:#0B2545;margin-bottom:6px;">No data to report yet</div>
+    <div style="font-size:13px;color:#64748B;max-width:320px;margin:0 auto;">Add and get a campaign approved to generate your first performance report.</div>
+</div>
+{% endif %}
+    </div>
+</body>
+</html>
