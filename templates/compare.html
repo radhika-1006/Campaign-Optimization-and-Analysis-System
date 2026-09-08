@@ -1,57 +1,81 @@
-# =====================================================
-# FIXED /compare ROUTE — replace your existing one entirely
-# =====================================================
+{% extends "base.html" %}
+{% block title %}Compare Campaigns{% endblock %}
+{% block container_class %}container-wide{% endblock %}
+{% block bodyclass %}with-nav{% endblock %}
+{% block topnav %}
+<nav class="topnav">
+    <div class="topnav-brand">CampOp</div>
+    <div class="topnav-links">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('campaigns') }}">Campaigns</a>
+        <a href="{{ url_for('compare') }}">Compare</a>
+        <a href="{{ url_for('report') }}">Report</a>
+        {% if session.is_admin %}<a href="{{ url_for('admin_campaigns') }}">Admin</a>{% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+{% block content %}
+<h2>Compare & Recommendations</h2>
+<p class="sub">Campaigns ranked by ROI, with suggestions on where to focus.</p>
 
-@app.route("/compare")
-def compare():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
+{% if campaigns %}
+<div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+    <div class="stat-box" style="text-align:left; padding: 18px;">
+        <div class="stat-label" style="margin-bottom:6px;">🏆 Best Performer</div>
+        <div class="stat-value" style="font-size:16px;">{{ best.name }}</div>
+        <div class="stat-label">ROI: {{ best.roi }}% &nbsp;•&nbsp; Platform: {{ best.platform }}</div>
+    </div>
+    <div class="stat-box" style="text-align:left; padding: 18px;">
+        <div class="stat-label" style="margin-bottom:6px;">⚠️ Needs Attention</div>
+        <div class="stat-value" style="font-size:16px;">{{ worst.name }}</div>
+        <div class="stat-label">ROI: {{ worst.roi }}% &nbsp;•&nbsp; Platform: {{ worst.platform }}</div>
+    </div>
+</div>
 
-    conn = get_db_connection()
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM campaigns WHERE user_id=%s AND status='approved'",
-                (session["user_id"],),
-            )
-            campaign_list = cursor.fetchall()
-    finally:
-        conn.close()
+<h3 style="font-size:15px; color:#0B2545; margin: 24px 0 10px;">Ranked by ROI</h3>
+<div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; font-size:14px;">
+    <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Platform</th>
+        <th>ROI (%)</th>
+        <th>CTR (%)</th>
+        <th>Conv. Rate (%)</th>
+    </tr>
+    {% for c in campaigns %}
+    <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ c.name }}</td>
+        <td>{{ c.platform }}</td>
+        <td style="color: {{ '#0B2545' if c.roi >= 0 else '#B91C1C' }}; font-weight:700;">{{ c.roi }}</td>
+        <td>{{ c.ctr }}</td>
+        <td>{{ c.conversion_rate }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
 
-    campaign_list = [calculate_campaign_stats(c) for c in campaign_list]
+<h3 style="font-size:15px; color:#0B2545; margin: 24px 0 10px;">Suggestions</h3>
+<ul style="padding-left: 20px; color:#1E3A5F; font-size:14px; line-height:1.8;">
+    {% for s in suggestions %}
+    <li>{{ s }}</li>
+    {% endfor %}
+</ul>
 
-    if not campaign_list:
-        return render_template("compare.html", campaigns=[], best=None, worst=None, suggestions=[])
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 12h8M8 8h8M8 16h5" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </div>
+    <div class="empty-state-title">Nothing to compare yet</div>
+    <div class="empty-state-text">Add at least one approved campaign to see rankings and suggestions.</div>
+    <a href="{{ url_for('add_campaign') }}" class="dash-link primary" style="display:inline-block; padding: 10px 20px;">+ Add New Campaign</a>
+</div>
+{% endif %}
 
-    ranked = sorted(campaign_list, key=lambda c: c["roi"], reverse=True)
-    best = ranked[0]
-    worst = ranked[-1]
-
-    suggestions = []
-    if len(ranked) >= 2:
-        suggestions.append(
-            f"'{best['name']}' has the highest ROI ({best['roi']}%). Consider shifting more budget toward it."
-        )
-        if worst["roi"] < best["roi"] / 2 and worst["roi"] >= 0:
-            suggestions.append(
-                f"'{worst['name']}' is underperforming compared to '{best['name']}'. Review its targeting or creative."
-            )
-
-    for c in campaign_list:
-        if c["roi"] < 0:
-            suggestions.append(f"'{c['name']}' has a negative ROI ({c['roi']}%). Consider pausing or reducing its budget.")
-        if c["ctr"] < 1:
-            suggestions.append(f"'{c['name']}' has a low CTR ({c['ctr']}%). Try improving ad creative or targeting.")
-        if c["conversion_rate"] < 2 and c["clicks"] and c["clicks"] > 20:
-            suggestions.append(f"'{c['name']}' has a low conversion rate ({c['conversion_rate']}%). Check your landing page.")
-
-    if not suggestions:
-        suggestions.append("All campaigns are performing reasonably well. Keep monitoring regularly.")
-
-    return render_template(
-        "compare.html",
-        campaigns=ranked,
-        best=best,
-        worst=worst,
-        suggestions=suggestions,
-    )
+<p style="text-align:center; margin-top:24px;"><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+{% endblock %}
