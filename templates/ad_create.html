@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Create Ad{% endblock %}
+{% block container_class %}container-wide{% endblock %}
+{% block bodyclass %}with-nav{% endblock %}
+{% block topnav %}
+<nav class="topnav">
+    <div class="topnav-brand">CampOp</div>
+    <div class="topnav-links">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('campaigns') }}">Campaigns</a>
+        <a href="{{ url_for('ads') }}">Ads</a>
+        <a href="{{ url_for('compare') }}">Compare</a>
+        <a href="{{ url_for('report') }}">Report</a>
+        {% if session.is_admin %}<a href="{{ url_for('admin_campaigns') }}">Admin</a>{% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+{% block content %}
+<h2>Create an Advertisement</h2>
+<p class="sub">Fill in your product details, generate ad copy, and customize the look.</p>
+
+<div class="form-with-preview">
+    <form method="POST" id="adForm" enctype="multipart/form-data">
+        <label>Product / Service Name</label>
+        <input type="text" name="product_name" id="f_product_name" placeholder="e.g. EcoBottle Pro" required>
+
+        <label>Product / Service Description</label>
+        <textarea name="product_description" id="f_product_description" rows="3" placeholder="Briefly describe what you're advertising"></textarea>
+
+        <label>Advertisement Type</label>
+        <select name="ad_type" id="f_ad_type" required>
+            <option value="">-- Select type --</option>
+            <option value="Banner">Banner</option>
+            <option value="Social Post">Social Post</option>
+            <option value="Text Ad">Text Ad</option>
+        </select>
+
+        <label>Ad Text</label>
+        <textarea name="ad_text" id="f_ad_text" rows="2" placeholder="Your ad headline/tagline"></textarea>
+        <button type="button" id="generateTextBtn" class="secondary-btn">✨ Generate Ad Text</button>
+
+        <label>Upload Image</label>
+        <input type="file" name="image" id="f_image" accept="image/*">
+
+        <label>Background Color</label>
+        <input type="color" name="bg_color" id="f_bg_color" value="#0B2545">
+
+        <label>Text Color</label>
+        <input type="color" name="text_color" id="f_text_color" value="#FFFFFF">
+
+        <button type="submit">Save Advertisement</button>
+    </form>
+
+    <div class="preview-panel">
+        <div class="preview-label">Live Ad Preview</div>
+        <div class="ad-canvas" id="adCanvas">
+            <img id="ad_image_preview" style="display:none;" alt="">
+            <div class="ad-canvas-overlay">
+                <div class="ad-canvas-type" id="ad_type_label">BANNER</div>
+                <div class="ad-canvas-name" id="ad_preview_name">Your Product Name</div>
+                <div class="ad-canvas-text" id="ad_preview_text">Your ad text will appear here.</div>
+            </div>
+        </div>
+        <button type="button" id="downloadBtn" class="secondary-btn" style="margin-top:12px; width:100%;">⬇ Download as Image</button>
+    </div>
+</div>
+
+<p style="text-align:center; margin-top:16px;"><a href="{{ url_for('ads') }}">Back to My Ads</a></p>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    const canvas = document.getElementById('adCanvas');
+    const imgPreview = document.getElementById('ad_image_preview');
+
+    function updatePreview() {
+        const name = document.getElementById('f_product_name').value || 'Your Product Name';
+        const text = document.getElementById('f_ad_text').value || 'Your ad text will appear here.';
+        const type = document.getElementById('f_ad_type').value || 'AD';
+        const bg = document.getElementById('f_bg_color').value;
+        const color = document.getElementById('f_text_color').value;
+
+        document.getElementById('ad_preview_name').textContent = name;
+        document.getElementById('ad_preview_text').textContent = text;
+        document.getElementById('ad_type_label').textContent = type.toUpperCase();
+        canvas.style.background = bg;
+        canvas.style.color = color;
+    }
+
+    document.getElementById('adForm').addEventListener('input', updatePreview);
+    updatePreview();
+
+    // Image upload preview
+    document.getElementById('f_image').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                imgPreview.src = ev.target.result;
+                imgPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            imgPreview.style.display = 'none';
+        }
+    });
+
+    // Simple rule-based ad text generator (not real AI — template based)
+    document.getElementById('generateTextBtn').addEventListener('click', function () {
+        const name = document.getElementById('f_product_name').value.trim();
+        const desc = document.getElementById('f_product_description').value.trim();
+
+        if (!name) {
+            alert('Enter a product name first.');
+            return;
+        }
+
+        const templates = [
+            `Discover ${name} — ${desc ? desc.slice(0, 60) : 'made for you'}.`,
+            `${name}: Quality you can trust. Shop now!`,
+            `Upgrade your life with ${name}. Limited time offer!`,
+            `Say hello to ${name} — the smarter choice.`,
+            `${name} is here. ${desc ? desc.slice(0, 50) : 'Don\\'t miss out'}.`
+        ];
+
+        const pick = templates[Math.floor(Math.random() * templates.length)];
+        document.getElementById('f_ad_text').value = pick;
+        updatePreview();
+    });
+
+    // Download the ad preview as a PNG image
+    document.getElementById('downloadBtn').addEventListener('click', function () {
+        html2canvas(canvas, { useCORS: true, backgroundColor: null }).then(function (renderedCanvas) {
+            const link = document.createElement('a');
+            link.download = 'my-ad.png';
+            link.href = renderedCanvas.toDataURL('image/png');
+            link.click();
+        });
+    });
+</script>
+{% endblock %}

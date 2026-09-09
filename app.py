@@ -1,10 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import pymysql
 import re
+import os
+from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "change-this-secret-key"  # TODO: move to env variable before deployment
+UPLOAD_FOLDER = os.path.join("static", "uploads")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # --- Database connection settings (update to match your local MySQL setup) ---
 DB_CONFIG = {
@@ -550,5 +560,121 @@ def reject_campaign(campaign_id):
         conn.close()
 
     return redirect(url_for("admin_campaigns"))
+# =====================================================
+# AD CREATOR MODULE - PYTHON CODE
+# =====================================================
+
+# -----------------------------------------------------
+# STEP 1: Add these imports near the top of app.py,
+# with your other imports.
+# -----------------------------------------------------
+"""
+import os
+from werkzeug.utils import secure_filename
+"""
+
+# -----------------------------------------------------
+# STEP 2: Add this configuration right after app.secret_key = "..."
+# -----------------------------------------------------
+"""
+UPLOAD_FOLDER = os.path.join("static", "uploads")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+"""
+
+# -----------------------------------------------------
+# STEP 3: Add these THREE routes anywhere among your
+# other routes (e.g. right after /report).
+# -----------------------------------------------------
+
+@app.route("/ads")
+def ads():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM ads WHERE user_id=%s ORDER BY created_at DESC",
+                (session["user_id"],),
+            )
+            ad_list = cursor.fetchall()
+    finally:
+        conn.close()
+
+    return render_template("ads.html", ads=ad_list)
+
+
+@app.route("/ads/create", methods=["GET", "POST"])
+def create_ad():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        product_name = request.form["product_name"].strip()
+        product_description = request.form.get("product_description", "").strip()
+        ad_type = request.form["ad_type"]
+        ad_text = request.form.get("ad_text", "").strip()
+        bg_color = request.form.get("bg_color", "#0B2545")
+        text_color = request.form.get("text_color", "#FFFFFF")
+
+        if not product_name or not ad_type:
+            flash("Product name and ad type are required.")
+            return redirect(url_for("create_ad"))
+
+        # Handle image upload
+        image_filename = None
+        file = request.files.get("image")
+        if file and file.filename and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            unique_name = f"{session['user_id']}_{int(dt.now().timestamp())}_{filename}"
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_name))
+            image_filename = unique_name
+
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """INSERT INTO ads
+                    (user_id, product_name, product_description, ad_type, ad_text, image_filename, bg_color, text_color)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (
+                        session["user_id"], product_name, product_description,
+                        ad_type, ad_text, image_filename, bg_color, text_color,
+                    ),
+                )
+                conn.commit()
+            flash("Ad created successfully.")
+            return redirect(url_for("ads"))
+        finally:
+            conn.close()
+
+    return render_template("ad_create.html")
+
+
+@app.route("/ads/delete/<int:ad_id>", methods=["POST"])
+def delete_ad(ad_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM ads WHERE id=%s AND user_id=%s",
+                (ad_id, session["user_id"]),
+            )
+            conn.commit()
+        flash("Ad deleted.")
+    finally:
+        conn.close()
+
+    return redirect(url_for("ads"))
 if __name__ == "__main__":
     app.run(debug=True)
